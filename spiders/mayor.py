@@ -45,6 +45,7 @@ class MayorSpider(scrapy.Spider):
             for ind, option in enumerate(options):
                 biracko_mjesto = option.xpath('.//text()').get()
                 if biracko_mjesto == '-':
+                    kandidat_dict = {}
                     broj_obradjenih_listica = new_page_selectable.xpath("//div[@id='leftBar']/span/text()").get().split(':')[-1]
                     broj_vazecih_listica = new_page_selectable.xpath("//div[@id='leftBar']/div[6]/div/span/text()").get().split(':')[-1]
                     broj_vazecih_redovnih_listica = new_page_selectable.xpath("//div[@id='leftBar']/div[6]/div/div[1]/span/span/text()").get()
@@ -52,6 +53,21 @@ class MayorSpider(scrapy.Spider):
                     broj_vazecih_odsustvo_mobilni_tim_i_DKP_listica = new_page_selectable.xpath("//div[@id='leftBar']/div[6]/div/div[3]/span/span/text()").get()
                     broj_vazecih_potvrdjenih_listica = new_page_selectable.xpath("//div[@id='leftBar']/div[6]/div/div[4]/span/span/text()").get()
                     broj_kandidata = new_page_selectable.xpath("//tr[@class='data']/td[3]/text()").get()
+                    for ind, kandidat in enumerate(new_page_selectable.xpath("//div[@class='tableDiv']/table/tbody/tr[@class='ng-scope']")):
+                        kandidat_kod = kandidat.xpath(".//td[1]/text()").get()
+                        kandidat_mandat = kandidat.xpath(".//td[9]/i").get()
+                        if kandidat_mandat is not None:
+                            kandidat_mandat = True
+                        else:
+                            kandidat_mandat = False
+                        kandidat_dict[kandidat_kod] = {
+                            'broj glasova - biracko mjesto': kandidat.xpath(".//td[3]/text()").get(),
+                            'ukupan broj vazecih listica (redovni) - biracko mjesto': kandidat.xpath(".//td[4]/text()").get(),
+                            'ukupan broj vazecih listica (posta) - biracko mjesto': kandidat.xpath(".//td[5]/text()").get(),
+                            'ukupan broj vazecih listica (odsustvo, mobilni tim i DKP) - biracko mjesto': kandidat.xpath(".//td[6]/text()").get(),
+                            'ukupan broj vazecih listica (potvrdjeni) - biracko mjesto': kandidat.xpath(".//td[7]/text()").get(),
+                            'mandat': kandidat_mandat
+                        }
                     continue
                 driver.find_element_by_xpath(f"//div[@id='leftBar']/div[5]/select/option[{ind+1}]").click()
                 time.sleep(2)
@@ -87,6 +103,12 @@ class MayorSpider(scrapy.Spider):
                         'ukupan broj vazecih listica (redovni) - izborna jedinica': broj_vazecih_redovnih_listica,
                         'ukupan broj vazecih listica (posta) - izborna jedinica': broj_vazecih_posta_listica,
                         'ukupan broj vazecih listica (odsustvo, mobilni tim i DKP) - izborna jedinica': broj_vazecih_odsustvo_mobilni_tim_i_DKP_listica,
-                        'ukupan broj vazecih listica (potvrdjeni) - izborna jedinica': broj_vazecih_potvrdjenih_listica
+                        'ukupan broj vazecih listica (potvrdjeni) - izborna jedinica': broj_vazecih_potvrdjenih_listica,
+                        'broj glasova - biracko mjesto': kandidat_dict[kandidat_sifra]['broj glasova - biracko mjesto'],
+                        'ukupan broj vazecih listica (redovni) - biracko mjesto': kandidat_dict[kandidat_sifra]['ukupan broj vazecih listica (redovni) - biracko mjesto'],
+                        'ukupan broj vazecih listica (posta) - biracko mjesto': kandidat_dict[kandidat_sifra]['ukupan broj vazecih listica (posta) - biracko mjesto'],
+                        'ukupan broj vazecih listica (odsustvo, mobilni tim i DKP) - biracko mjesto': kandidat_dict[kandidat_sifra]['ukupan broj vazecih listica (odsustvo, mobilni tim i DKP) - biracko mjesto'],
+                        'ukupan broj vazecih listica (potvrdjeni) - biracko mjesto': kandidat_dict[kandidat_sifra]['ukupan broj vazecih listica (potvrdjeni) - biracko mjesto'],
+                        'mandat': kandidat_dict[kandidat_sifra]['mandat']
                     }
             driver.close()
